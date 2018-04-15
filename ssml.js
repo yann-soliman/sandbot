@@ -60,9 +60,9 @@ const SSML = class {
   }
   
   // Time
-  time (time) {
+  timeNoSeconds (time) {
     if (time) {
-      this.tags.push(`<say-as interpret-as="time" format="hms24" detail="1">` + time + `</say-as>`);
+      this.tags.push(`<say-as interpret-as="time" format="hm24" detail="1">` + time + `</say-as>`);
     }
     return this;
   }

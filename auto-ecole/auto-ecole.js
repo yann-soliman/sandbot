@@ -42,15 +42,15 @@ class AutoEcole {
 			
 			// Date au format yyyy-MM-dd
 			let dateString = dateNextSession.getFullYear() + "-" + dateNextSession.getMonth().toString().padStart(2, "0") + "-" + dateNextSession.getDate();		
-			// Heure au format hh:mm:ss
-			let timeString = dateNextSession.getHours().toString().padStart(2, "0") + ":" + dateNextSession.getMinutes().toString().padStart(2, "0") + ":" + dateNextSession.getSeconds().toString().padStart(2, "0");
+			// Heure au format hh:mm
+			let timeString = dateNextSession.getHours().toString().padStart(2, "0") + ":" + dateNextSession.getMinutes().toString().padStart(2, "0");
 			
 			
 			const response = new Ssml();
 			response.say("La date de la prochaine session d'auto-école est le");
 			response.date(dateString);
 			response.say("à");
-			response.time(timeString);
+			response.timeNoSeconds(timeString);
 			
 			this.app.tell(response.toString());
 		};
