@@ -1,0 +1,23 @@
+{
+  "name": "sandbot",
+  "version": "1.0.0",
+  "description": "Sandbox à bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yann-soliman/sandbot.git"
+  },
+  "author": "Y.S",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yann-soliman/sandbot/issues"
+  },
+  "homepage": "https://github.com/yann-soliman/sandbot#readme",
+  "dependencies": {
+    "actions-on-google": "^1.10.0",
+    "express": "^4.16.3"
+  }
+}
