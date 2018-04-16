@@ -18,7 +18,10 @@
   "homepage": "https://github.com/yann-soliman/sandbot#readme",
   "dependencies": {
     "actions-on-google": "^1.10.0",
+    "date-and-time": "^0.6.2",
     "express": "^4.16.3",
-    "google-spreadsheet": "^2.0.4"
+    "google-spreadsheet": "^2.0.4",
+    "jira-connector": "^2.7.0",
+    "youtube-audio-stream": "^0.2.0"
   }
 }

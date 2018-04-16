@@ -4,6 +4,7 @@ process.env.DEBUG = 'actions-on-google:*';
 const { DialogflowApp } = require('actions-on-google');
 const { GSpreadSheet } = require('../connectors/googlespreadsheet.js')
 const Ssml = require('../ssml.js').SSML;
+const date = require('date-and-time');
 
 const Actions = {
 	WELCOME: "input.welcome",
@@ -38,13 +39,33 @@ class AutoEcole {
     [Actions.NEXT_SESSION] () {		
 	
 		let cbFindColumn = listNextSession => {
-			let dateNextSession = new Date(listNextSession[1].value);
+			
+			let today = new Date();
+			
+			//Cherche la session la plus proche
+			let nextSession = listNextSession.reduce((accumulator, currentValue) => {
+				//Cas à la marge
+				if(accumulator === undefined && !isNaN(Date.parse(currentValue.value))) {
+					return currentValue;
+				}
+				if(isNaN(Date.parse(currentValue.value))) {
+					return accumulator
+				}
+				
+				// diff en heures, la diff la plus petite l'emporte
+				let currentValueDate = new Date(currentValue.value);
+				let diff = date.subtract(currentValueDate, today).toHours();
+				let accumulatorDate = new Date(accumulator.value);
+				let bestDiff = date.subtract(accumulatorDate, today).toHours();
+				return diff < bestDiff ? currentValue : accumulator;
+			}, undefined);
+			
+			let dateNextSession = new Date(nextSession.value);
 			
 			// Date au format yyyy-MM-dd
-			let dateString = dateNextSession.getFullYear() + "-" + dateNextSession.getMonth().toString().padStart(2, "0") + "-" + dateNextSession.getDate();		
+			let dateString = date.format(dateNextSession, 'YYYY-MM-DD'); 	
 			// Heure au format hh:mm
-			let timeString = dateNextSession.getHours().toString().padStart(2, "0") + ":" + dateNextSession.getMinutes().toString().padStart(2, "0");
-			
+			let timeString = date.format(dateNextSession, 'HH:mm');			
 			
 			const response = new Ssml();
 			response.say("La date de la prochaine session d'auto-école est le");
