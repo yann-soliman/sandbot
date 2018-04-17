@@ -2,7 +2,7 @@
 
 process.env.DEBUG = 'actions-on-google:*';
 const { DialogflowApp } = require('actions-on-google');
-const { GSpreadSheet } = require('../connectors/googlespreadsheet.js')
+const { GSpreadSheet } = require('../connectors/googlespreadsheet.js');
 const Ssml = require('../ssml.js').SSML;
 const date = require('date-and-time');
 
@@ -76,7 +76,7 @@ class AutoEcole {
 			this.app.tell(response.toString());
 		};
 		
-		let gss = new GSpreadSheet()
+		let gss = new GSpreadSheet();
 		gss.findColumn("Date auto-école", cbFindColumn);			
         
     }    

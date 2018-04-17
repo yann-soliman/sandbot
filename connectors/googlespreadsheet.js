@@ -13,7 +13,7 @@ class GSpreadSheet {
     }
     
 	// Retourne la sheet n° sheetNumber du fichier
-	getWorksheet(sheetNumber = 0, cb) {
+	getWorksheet(sheetNumber, cb) {
 		
 		let cbToCall = (err, info) => {
 			console.log('Loaded doc: '+info.title+' by '+info.author.email);
@@ -43,9 +43,9 @@ class GSpreadSheet {
 						  };
 			sheet.getCells(options, cbGetCells);
 			console.log('sheet 1: '+sheet.title+' '+sheet.rowCount+'x'+sheet.colCount);			
-		}
+		};
 		
-		let sheet = this.getWorksheet(0, cbGetWorksheet);
+		this.getWorksheet(0, cbGetWorksheet);
 		
 	}
 	
@@ -65,7 +65,7 @@ class GSpreadSheet {
 		});
 		
 		// On identifie dans les "en-têtes" (première ligne), laquelle porte le nom de la liste voulue
-		let colIndex = tab2d[0].findIndex(cell => cell.value == columnName);
+		let colIndex = tab2d[0].findIndex(cell => cell.value === columnName);
 		
 		// Et on construit la liste avec la colonne trouvée
 		let colList = [];			

@@ -1,8 +1,8 @@
 'use strict';
 
-var JiraClient = require('jira-connector');
+let JiraClient = require('jira-connector');
 
-var jira = new JiraClient( {
+let jira = new JiraClient( {
     host: '192.168.81.209',
 	port: '8080',
 	protocol: 'http',
