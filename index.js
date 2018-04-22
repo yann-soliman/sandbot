@@ -2,22 +2,21 @@
 
 // Imports
 const express = require('express');
-const { Game } = require('./game/game.js');
-const { AutoEcole } = require('./auto-ecole/auto-ecole.js');
-const { Jira } = require('./jira/jira.js');
+const { dialogflow } = require('actions-on-google');
+const { fulfillment } = require('./jira/fulfillment.js');
 
 // Configuration express
-const app = express();
-app.use(express.json());
+const exp = express();
+exp.use(express.json());
+exp.get('/', (req, resp) => resp.status(404).send("Try with a post..."));
 
-// Point d'entré
-//app.post('/', (req, resp) => new Game(req, resp).dispatch())
-app.post('/', (req, resp) => new AutoEcole(req, resp).dispatch());
-//app.post('/', (req, resp) => new Jira(req, resp).dispatch())
-app.get('/', (req, resp) => resp.status(404).send("Try with a post..."));
+
+const app = dialogflow().use(fulfillment);
+
+exp.use(app);
 
 // Listening...
-app.set('port', process.env.PORT || 8081);
-app.listen(app.get('port'), () =>
-  console.log('App is running on ' + app.get('port'))
+exp.set('port', process.env.PORT || 8081);
+exp.listen(exp.get('port'), () =>
+    console.log('App is running on ' + exp.get('port'))
 );

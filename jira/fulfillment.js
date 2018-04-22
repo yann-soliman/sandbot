@@ -1,112 +1,91 @@
 'use strict';
 
 process.env.DEBUG = 'actions-on-google:*';
-let async = require('async');
-const { DialogflowApp } = require('actions-on-google');
 const { Jira } = require('./jira.js');
 const { Normalizer } = require('./normalizer.js');
 
 const Actions = {
-    WELCOME: "input.welcome",
+    WELCOME: "Default Welcome Intent",
     TIMING: 'timing',
-    COMMENT: 'comment',
-    QUIT: 'quit'
+    ASK_ADD_COMMENT: 'ask-add-comment',
+    ADD_COMMENT: 'add-comment'
 };
 
 const Parameters = {
-    ISSUE_KEY: "issue-key",
+    ISSUE_NUMBER: "issue-number",
     TIME_SPENT: "time-spent",
-    UNIT_TIME_SPENT: "unit-time-spent",
     DATE: "date",
     COMMENT: 'comment',
 };
 
-class Fulfillment {
 
-    constructor (req, resp) {
-        console.log(`Headers: ${JSON.stringify(req.headers)}`);
-        console.log(`Body: ${JSON.stringify(req.body)}`);
-
-        this.app = new DialogflowApp({ request: req, response: resp });
-        this.jira = new Jira();
-    }
-
-    // Dispatch vers la bonne méthode en fonction de l'intention
-    dispatch () {
-        const map = this;
-        const action = this.app.getIntent();
-        if (!action) {
-            return this.app.ask("Je n'ai pas compris ce que je dois faire là...");
+const fulfillment = app => {
+    app.intent(Actions.WELCOME, conv => {
+            conv.ask("Bonjour maître, comment puis-je vous être utile ?")
         }
-        map[action]();
-    }
-
-    // Bienvenue
-    [Actions.WELCOME]() {
-        this.app.ask("Bonjour maître, comment puis-je vous être utile ?");
-    }
+    );
 
     // Log un temps passé sur une tâche
-    [Actions.TIMING] () {
+    app.intent(Actions.TIMING, conv => timing(conv));
 
-        let issueKey = this.app.getArgument(Parameters.ISSUE_KEY);
-        let timeSpent = this.app.getArgument(Parameters.TIME_SPENT);
-        let unitTimeSpent = this.app.getArgument(Parameters.UNIT_TIME_SPENT);
-        //TODO: voir comment les dates sont envoyées
-        let date = this.app.getArgument(Parameters.DATE);
+    async function timing(conv) {
+        let issueNumber = conv.parameters[Parameters.ISSUE_NUMBER];
+        let timeSpent = conv.parameters[Parameters.TIME_SPENT].amount;
+        let unitTimeSpent = conv.parameters[Parameters.TIME_SPENT].unit;
+        let inputDate = conv.parameters[Parameters.DATE];
 
-        console.log("issueKey = " + issueKey);
+        console.log("issueNumber = " + issueNumber);
         console.log("timeSpent = " + timeSpent);
-        console.log("unitTimeSpent = " + unitTimeSpent);
-        console.log("date = " + date);
+        console.log("unitTimeSpent = " + timeSpent);
+        console.log("date = " + inputDate);
 
-        let normalizedIssueKey = Normalizer.assembleString(issueKey)
+        let issueKey = Normalizer.toJiraIssueKey(issueNumber);
         let jiraTimeSpent = Normalizer.toJiraTimeSpent(timeSpent, unitTimeSpent);
+        let date = new Date(inputDate);
 
-        async.series([
-            step => this.jira.addWorkLog(issueKey, jiraTimeSpent, date, step)
-        ],
-            err => {
-                console.log("Erreur dans le fulfillment du timing : " + err);
-                this.app.talk("Oups... petite erreur technique lors du timing de la tâche...");
-            }
-        );
+        let jira = new Jira();
 
-        //TODO: Déplacer la suite dans le async.series ?
-        this.app.talk("C'est bon");
-
+        try {
+            await jira.addWorkLog(issueKey, jiraTimeSpent, date);
+            conv.ask("D'accord, qu'avez-vous fait d'autre ?");
+        }
+        catch(err) {
+            console.log("Erreur dans le fulfillment du timing : " + JSON.stringify(err));
+            conv.close("Oups... petite erreur technique lors du timing de la tâche...");
+        }
     }
 
+    // Demande à rajouter un commentaire
+    app.intent(Actions.ASK_ADD_COMMENT, conv => {
+        // Sauvegarde la clé dans la "session utilisateur"
+        conv.data.issueKey = conv.parameters[Parameters.ISSUE_NUMBER];
+        conv.ask("Je vous écoute");
+    });
+
+
     // Ajoute un commentaire sur une tâche
-    [Actions.COMMENT] () {
+    app.intent(Actions.ADD_COMMENT, conv => Promise.resolve(comment(conv)));
 
-        //TODO: normalize this
-        let issueKey = this.app.getArgument(Parameters.ISSUE_KEY);
-        let comment = this.app.getArgument(Parameters.COMMENT);
+    async function comment(conv) {
+        let issueNumber = conv.data.issueKey;
+        let comment = conv.query;
 
+        let issueKey = Normalizer.toJiraIssueKey(issueNumber);
         console.log("issueKey = " + issueKey);
         console.log("comment = " + comment);
 
-        async.series([
-                step => this.jira.comment(jiraTask, comment, step)
-            ],
-            err => {
-                console.log("Erreur dans le fulfillment de l'ajout d'un commentaire : " + err);
-                this.app.talk("Oups, petite erreur technique lors de l'ajout du commentaire sur la tâche...");
-            }
-        );
+        let jira = new Jira();
 
-        //TODO: Déplacer la suite dans le async.series ?
-        this.app.ask("C'est fait ! Autre chose maître ?");
-
+        try {
+            await jira.comment(issueKey, comment);
+            conv.ask("C'est fait ! Autre chose maître ?");
+        } catch(err) {
+            console.log("Erreur dans le fulfillment de l'ajout d'un commentaire : " + err);
+            conv.close("Oups, petite erreur technique lors de l'ajout du commentaire sur la tâche...");
+        }
     }
-
-    // Sortir
-    [Actions.QUIT] () {
-        this.app.talk("A bientôt maître.");
-    }
-}
+};
 
 module.exports = {
-    Fulfillment: Fulfillment
+    fulfillment: fulfillment
 };
